@@ -159,7 +159,7 @@ func main() {
 		trackFace(&img)
 
 		window.IMShow(img)
-		if window.WaitKey(10) >= 0 {
+		if window.WaitKey(1) == 27 {
 			break
 		}
 	}

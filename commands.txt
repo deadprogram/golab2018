@@ -1,14 +1,17 @@
-hello, world
-go run ./cmd/capwindow/main.go 0
+## Hello, world of video
+go run ./demo/hellovideo/main.go
 
-object classification:
-go run ./cmd/tf-classifier/main.go 0 ~/Downloads/tensorflow_inception_graph.pb ~/Downloads/imagenet_comp_graph_label_strings.txt opencv cpu
+## Face blurring
+go run ./demo/faceblur/main.go 1 data/haarcascade_frontalface_default.xml
 
-style mapping:
-go run ./cmd/dnn-style-transfer/main.go 0 ~/Downloads/starry_night.t7 openvino fp16
+## Motion tracking
+go run demo/motion-detect/motion/main.go 1
 
-pose detection:
-go run ./cmd/dnn-pose-detection/main.go 0 ~/Downloads/pose_iter_440000.caffemodel ~/Downloads/openpose_pose_coco.prototxt openvino cpu
+## Web video streaming
+go run demo/mjpeg-streamer/main.go 1 0.0.0.0:8080
 
-object tracking:
-go run ~/Preso/iotdevfest-3/demo/facetracker/main.go ~/Downloads/res10_300x300_ssd_iter_140000.caffemodel ~/Development/opencv/samples/dnn/face_detector/deploy.prototxt openvino fp16
+## Style transfer
+go run demo/style-transfer/main.go 1 data/starry_night.t7 opencv fp32
+
+## Object tracking drone:
+go run demo/facetracker/main.go data/res10_300x300_ssd_iter_140000.caffemodel data/deploy.prototxt opencv cpu

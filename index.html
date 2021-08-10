@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8">
 
-    <title>Computer Vision Using Go and OpenCV 3 - Gophercon 2018</title>
+    <title>Computer Vision Using Go and OpenCV 3 - GoLab 2018</title>
 
     <meta name="description" content="Computer Vision Using Go and OpenCV 3">
     <meta name="author" content="Ron Evans">
@@ -51,8 +51,9 @@
 
         <section>
             <div class="image-container">
-              <img src="images/gophercon2018.gif">
+              <img src="images/golab.png">
             </div>
+            <h3>GoLab</h3>
           </section>
     
         <section>
@@ -272,7 +273,7 @@ func main() {
 
         <section>
           <section>
-              <h2>4 Applications Using GoCV</h2>
+              <h2>5 Applications Using GoCV</h2>
           </section>
         </section>
 
@@ -551,7 +552,7 @@ func main() {
     
         <section>
             <section>
-                <h2>MJPEG Streaming</h2>
+                <h2>Web video Streaming</h2>
             </section>
 
             <section>
@@ -638,6 +639,164 @@ func capture() {
     
         <section>
             <section>
+                <h2>Style transfer using Deep Neural Network</h2>
+            </section>
+
+            <section>
+                <div class="image-container">
+                  <img src="images/dnn.png">
+                </div>
+                <h3>Deep Neural Network</h3>
+                <p>CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=1496812</p>
+            </section>
+  
+            <section>
+                <div class="image-container">
+                    <img src="images/starry-night.jpg">
+                </div>
+                <h3>"Starry Night" - Van Gogh</h3>
+            </section>
+
+            <section>
+                <div class="image-container">
+                    <img src="images/chicago.jpg">
+                </div>
+                <h3>Chicago</h3>
+            </section>
+
+            <section>
+                <div class="image-container">
+                    <img src="images/chicago-starry-night.jpg">
+                </div>
+                <h3>Chicago Starry Night</h3>
+            </section>
+
+            <section>
+                <h2>"Perceptual Losses for Real-Time Style Transfer and Super-Resolution"</h2>
+                <h3>Justin Johnson, Alexandre Alahi, Li Fei-Fei</h3>
+            </section>                    
+    
+            <section>
+                <div class="image-container">
+                    <img src="images/torch-logo.png">
+                </div>
+                <h3>Torch</h3>
+            </section>
+                
+            <section>
+                <pre><code class="golang">
+package main
+
+import (
+    "fmt"
+    "image"
+    "os"
+
+    "gocv.io/x/gocv"
+)
+
+func main() {
+    if len(os.Args) < 3 {
+        fmt.Println("How to run:\ndnn-style-transfer [videosource] [modelfile] ([backend] [device])")
+        return
+    }
+
+    // parse args
+    deviceID := os.Args[1]
+    model := os.Args[2]
+    backend := gocv.NetBackendDefault
+    if len(os.Args) > 3 {
+        backend = gocv.ParseNetBackend(os.Args[3])
+    }
+
+    target := gocv.NetTargetCPU
+    if len(os.Args) > 4 {
+        target = gocv.ParseNetTarget(os.Args[4])
+    }
+
+    // open capture device
+    webcam, err := gocv.OpenVideoCapture(deviceID)
+    if err != nil {
+        fmt.Printf("Error opening video capture device: %v\n", deviceID)
+        return
+    }
+    defer webcam.Close()
+
+    window := gocv.NewWindow("DNN Style Transfer")
+    defer window.Close()
+
+    img := gocv.NewMat()
+    defer img.Close()
+
+    // open DNN style transfer model
+    net := gocv.ReadNet(model, "")
+    if net.Empty() {
+        fmt.Printf("Error reading network model from : %v\n", model)
+        return
+    }
+    defer net.Close()
+    net.SetPreferableBackend(gocv.NetBackendType(backend))
+    net.SetPreferableTarget(gocv.NetTargetType(target))
+
+    fmt.Printf("Start reading camera device: %v\n", deviceID)
+
+    for {
+        if ok := webcam.Read(&img); !ok {
+            fmt.Printf("Error cannot read device %v\n", deviceID)
+            return
+        }
+        if img.Empty() {
+            continue
+        }
+
+        // convert image Mat to 640x480 blob that the style transfer can analyze
+        blob := gocv.BlobFromImage(img, 1.0, image.Pt(640, 480), gocv.NewScalar(103.939, 116.779, 123.68, 0), false, false)
+
+        // feed the blob into the detector
+        net.SetInput(blob, "")
+
+        // run a forward pass thru the network
+        probMat := net.Forward("")
+        sz := probMat.Size()
+        dims := sz[2] * sz[3]
+        out := gocv.NewMatWithSize(480, 640, gocv.MatTypeCV8UC3)
+
+        // take blob and obtain displayable Mat image from it
+        for i := 0; i < dims; i++ {
+            r := probMat.GetFloatAt(0, i)
+            r += 103.939
+
+            g := probMat.GetFloatAt(0, i+dims)
+            g += 116.779
+
+            b := probMat.GetFloatAt(0, i+dims*2)
+            b += 123.68
+
+            out.SetUCharAt(0, i*3, uint8(r))
+            out.SetUCharAt(0, i*3+1, uint8(g))
+            out.SetUCharAt(0, i*3+2, uint8(b))
+        }
+
+        window.IMShow(out)
+        if window.WaitKey(1) >= 0 {
+            break
+        }
+
+        probMat.Close()
+        blob.Close()
+        out.Close()
+    }
+}                        
+                </code></pre>
+            </section>
+            
+            <section>
+                <h2>Demo</h2>
+            </section>
+        </section>
+
+        <section>
+            <section>
                 <h2>Object Classification/Tracking</h2>
             </section>
 
@@ -661,14 +820,6 @@ func capture() {
                 <img src="images/caffe-logo.png">
               </div>
               <h3>Caffe</h3>
-            </section>
-
-            <section>
-              <div class="image-container">
-                <img src="images/dnn.png">
-              </div>
-              <h3>Deep Neural Network</h3>
-              <p>CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=1496812</p>
             </section>
 
             <section>
@@ -1048,37 +1199,13 @@ func getRightStick() pair {
         </section>
 
         <section>
-            <section>
-                <h2>Reminder - Thursday is community day</h2>
-            </section>
+            <h2>I have stickers</h2>
+        </section>
 
-            <section>
-                <h2>Go Hardware hack session</h2>
-            </section>
-    
-            <section>
-                <h2>Thursday 10 AM-4 PM</h2>
-            </section>
-    
-            <section>
-                <h2>Lots of hardware from our wonderful sponsors</h2>
-            </section>
-
-            <section>
-                <h2>Gophercar</h2>
-            </section>
-
-            <section>
-                <h2>Gopherdrone flight zone</h2>
-            </section>
-
-            <section>
-                <h2>Special guest: Misty I Robot</h2>
-            </section>
-
-            <section>
-                <h2>Don't miss it</h2>
-            </section>
+        <section>
+            <h2>Check out new project TinyGo</h2>
+            <h3>Go on microcontrollers</h3>
+            <h3>tinygo.org</h3>
         </section>
 
         <section>
